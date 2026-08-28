@@ -1,0 +1,54 @@
+# Additive cargo-fuzz crate for the Mayhem integration. Lives under mayhem/fuzz/ and
+# is NEVER part of upstream. It depends on the UNMODIFIED jsonrpc crate at the repo
+# root and exposes the SAME two target names as upstream's own fuzz/ crate —
+# `simple_http` and `minreq_http`.
+#
+# We ship this additive crate rather than reuse upstream fuzz/ because upstream's
+# fuzz crate is a HONGGFUZZ harness (honggfuzz::fuzz! main loop), not a libFuzzer
+# one — Mayhem drives libFuzzer binaries. The harness bodies below are ported
+# verbatim from fuzz/fuzz_targets/{simple_http,minreq_http}.rs; the whole build
+# carries --cfg jsonrpc_fuzz (upstream's own fuzzing cfg) so the library exposes its
+# FUZZ_TCP_SOCK injection point exactly as upstream's fuzzer uses it.
+#
+# The standalone [workspace] table keeps this crate out of the root workspace's
+# resolution, so the upstream manifest is never touched and cargo-fuzz writes its
+# binaries under mayhem/fuzz/target/.
+[package]
+name = "jsonrpc-mayhem-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.jsonrpc]
+path = "../.."
+features = ["minreq_http"]
+
+[lints.rust]
+unexpected_cfgs = { level = "deny", check-cfg = ['cfg(jsonrpc_fuzz)', 'cfg(fuzzing)'] }
+
+# Keep this crate out of the upstream root workspace's resolution.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = true
+overflow-checks = true
+debug-assertions = true
+
+[[bin]]
+name = "simple_http"
+path = "fuzz_targets/simple_http.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "minreq_http"
+path = "fuzz_targets/minreq_http.rs"
+test = false
+doc = false

@@ -1,0 +1,31 @@
+# Known-answer-test (KAT) oracle probe for the Mayhem integration. Standalone crate
+# under mayhem/ — the [workspace] table keeps it OUT of the upstream root workspace's
+# resolution (we never touch upstream's Cargo.toml). It only CALLS the unmodified
+# jsonrpc library via a path dependency.
+#
+# Built with `--cfg jsonrpc_fuzz` (upstream's own fuzzing cfg) so it can drive a fixed
+# canned HTTP response through the SAME SimpleHttpTransport code path the fuzz target
+# explores; everything else is normal, non-sanitized code.
+[package]
+name = "jsonrpc-kat"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+serde_json = { version = "1", features = ["raw_value"] }
+
+[dependencies.jsonrpc]
+path = "../.."
+features = ["minreq_http"]
+
+[lints.rust]
+unexpected_cfgs = { level = "deny", check-cfg = ['cfg(jsonrpc_fuzz)'] }
+
+# Keep this crate out of the upstream root workspace's resolution.
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "jsonrpc-kat"
+path = "src/main.rs"

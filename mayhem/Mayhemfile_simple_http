@@ -1,0 +1,16 @@
+# rust-jsonrpc in-process libFuzzer target `simple_http` (cargo-fuzz / libfuzzer-sys,
+# additive mayhem/fuzz crate — upstream's fuzz/ is honggfuzz). Fuzz bytes are injected
+# as the read side of the transport socket (--cfg jsonrpc_fuzz FUZZ_TCP_SOCK), so every
+# input is parsed as a raw HTTP/1.1 response by SimpleHttpTransport's hand-rolled HTTP
+# client (status line, headers, content-length, serde_json JSON-RPC body).
+project: savantenvs/rust-jsonrpc
+target: simple_http
+
+cmds:
+  - cmd: /mayhem/simple_http
+    libfuzzer: true
+    dictionary: /mayhem/mayhem/simple_http/simple_http.dict
+
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/simple_http/testsuite

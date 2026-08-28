@@ -1,0 +1,16 @@
+# rust-jsonrpc in-process libFuzzer target `minreq_http` (cargo-fuzz / libfuzzer-sys,
+# additive mayhem/fuzz crate — upstream's fuzz/ is honggfuzz). Ported verbatim from
+# upstream fuzz/fuzz_targets/minreq_http.rs: round-trips a JSON-RPC request through
+# MinreqHttpTransport (serde_json request serialization, minreq URL/request handling,
+# response/error paths) with the fuzz bytes loaded into the library's FUZZ_TCP_SOCK
+# injection point. No local seeds: coverage on this target is input-independent
+# (upstream's design), so it carries only the server-accumulated corpus.
+project: savantenvs/rust-jsonrpc
+target: minreq_http
+
+cmds:
+  - cmd: /mayhem/minreq_http
+    libfuzzer: true
+
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
